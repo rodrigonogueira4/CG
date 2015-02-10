@@ -1,3 +1,7 @@
+<br>	
+Galaxy with pulsating center and weird cursor made of dark matter
+<br>
+<br>
 <script src=lib1.js></script>
 
 <canvas id='canvas1' width='800' height='800'></canvas>
@@ -42,29 +46,36 @@
       vec2 res = rot*vec2(xo,yo);
       float x = res[0];
       float y = res[1];
-      //Draw Spirals
-      for(int i = 0; i <= 20; i++)
-      {
-        mat2 rot2 = mat2(cos(float(i)/1.), -sin(float(i)/1.),
-                        sin(float(i)/1.), cos(float(i)/1.));
-        vec2 res2 = rot2*vec2(x,y);
-        float xr = res2[0];
-        float yr = res2[1];
-        float v = atan(yr,xr) + 3.14;
-        float rr = (2. * x * x + y * y)/pow(v, 2.+rand);
-        if (rr < 0.025 && rr > 0.020 && v < 2.+1.5*rand) {
-           float t = .2 + 1. * (1.-(2. * x * x + y * y));        //    do shading.
-           color = vec3(t, t, t);                         //    Make cool easter egg-like
-           //color.r *= 1. + .2 * sin(30. * sin(uTime) * (x + .5 * z + .03 * sin(20. * y) )); // pattern.
-        }
-      }
-      //Draw Center/Elipse
-      float rr = (2. * x * x + y * y);
-      if (rr < rand/10.+(sin(uTime))/50.) {
-         float z = sqrt(1. - rr);                       //    compute z.
-         float t = .2 + .5 * max(0., x + y + z);        //    do shading.
-         color = vec3(1., 1., t);                         //    Make cool easter egg-like
-         
+      
+      float rr3 = pow(xc-xo,2.) + pow(yc-yo,2.) + 0.1*(-0.5+rand);
+      //if (xo-0.1 < xc+0.3*(-0.5+rand) && xo+0.1 > xc+0.3*(-0.5+rand) && yo-0.1 < yc+0.3*(-0.5+rand) && yo+0.1 > yc+0.3*(-0.5+rand)){
+      if (rr3<0.05){
+         color = vec3(0.,0., 0.); 
+      }else{  
+	      //Draw Spirals
+	      for(int i = 0; i <= 20; i++)
+	      {
+		mat2 rot2 = mat2(cos(float(i)/1.), -sin(float(i)/1.),
+		                sin(float(i)/1.), cos(float(i)/1.));
+		vec2 res2 = rot2*vec2(x,y);
+		float xr = res2[0];
+		float yr = res2[1];
+		float v = atan(yr,xr) + 3.14;
+		float rr = (2. * x * x + y * y)/pow(v, 2.+rand);
+		if (rr < 0.025 && rr > 0.020 && v < 2.+1.5*rand) {
+		   float t = .2 + 1. * (1.-(2. * x * x + y * y));        //    do shading.
+		   color = vec3(t, t, t);                         //    Make cool easter egg-like
+		   //color.r *= 1. + .2 * sin(30. * sin(uTime) * (x + .5 * z + .03 * sin(20. * y) )); // pattern.
+		}
+	      }
+	      //Draw Center/Elipse
+	      float rr = (2. * x * x + y * y);
+	      if (rr < rand/10.+(sin(uTime))/50.) {
+		 float z = sqrt(1. - rr);                       //    compute z.
+		 float t = .2 + .5 * max(0., x + y + z);        //    do shading.
+		 color = vec3(1., 1., t);                         //    Make cool easter egg-like
+		 
+	      }
       }
       gl_FragColor = vec4(color, 1.);
    }
