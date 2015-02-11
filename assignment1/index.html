@@ -1,5 +1,5 @@
 <br>	
-Galaxy with pulsating center and weird cursor made of dark matter
+Galaxy with pulsating center and a weird cursor made of dark matter
 <br>
 <br>
 <script src=lib1.js></script>
@@ -70,7 +70,7 @@ Galaxy with pulsating center and weird cursor made of dark matter
 	      }
 	      //Draw Center/Elipse
 	      float rr = (2. * x * x + y * y);
-	      if (rr < rand/10.+(sin(uTime))/50.) {
+	      if (rr < rand/10.+sin(2.*uTime)/50.) {
 		 float z = sqrt(1. - rr);                       //    compute z.
 		 float t = .2 + .5 * max(0., x + y + z);        //    do shading.
 		 color = vec3(1., 1., t);                         //    Make cool easter egg-like
