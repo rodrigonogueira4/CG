@@ -285,8 +285,8 @@
     canvas.update = function(g) {
       this.g = g; // so the drawLine method will know where to draw to.
       var noiseGen = new Noise();
-      var noisex = noiseGen.noise([time/3,0,time/3]);
-      var noisey = noiseGen.noise([time*time/9,time/3,time/3]);
+      var noisex = noiseGen.noise([time/6,0,time/6]);
+      var noisey = noiseGen.noise([time*time/36,time/6,time/6]);
       //calculate camera matrix C:
       var Cz = [0.2*noisex,0.2*noisey,1]; //aim
       var Cpos = [0,0,-1]; //pos
