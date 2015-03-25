@@ -1,7 +1,7 @@
-<body bgcolor=Black>
+<body bgcolor=white>
 <center>
 <br><br>
-<font color="black">Carnival</font>
+<font color="black">Click to create an explosion of birds</font>
 <br><br>
 <canvas id=canvas1 background='black' width=800 height=800>
 
@@ -9,310 +9,135 @@
 </body>
 
 <script src=drawlib1.js></script>
-<script src=noise.js></script>
+
 <script>
 
-   var origin     = new Vector3(0,0,0);
-   var shoulder   = new Vector3();
-   var elbow      = new Vector3();
-   var wrist      = new Vector3();
-   var fingertips = new Vector3();
-   var m = new Matrix();
+   var CustomRandom = function(nseed) {
+
+		var seed,
+		    constant = Math.pow(2, 13)+1,
+		    prime = 37,
+		    maximum = Math.pow(2, 50);
+	 
+		if (nseed) {
+		    seed = nseed;
+		}
+	 
+		if (seed == null) {
+	        //if there is no seed, use timestamp
+		    seed = (new Date()).getTime();
+		} 
+		return {
+		    next : function() {
+		        seed *= constant;
+		        seed += prime;
+		        seed %= maximum;
+		        
+		        return seed;
+		    }
+		}
+   }
+
    var canvas = initCanvas('canvas1');
-   function drawLine(src, dst, g){
-       g.strokeStyle = 'blue';
-       g.beginPath();
-       g.moveTo(400+200*src.x, 400+200*-src.y);
-       g.lineTo(400+200*dst.x, 400+200*-dst.y);
-       g.stroke();
-   }
-   
-    
-   function drawSquare(pt1, pt2, pt3, pt4, g, color){
-       pt1 = perspectiveTransform(pt1, 2.5);
-       pt2 = perspectiveTransform(pt2, 2.5);
-       pt3 = perspectiveTransform(pt3, 2.5);
-       pt4 = perspectiveTransform(pt4, 2.5);
-       pt1.x = 400+200*pt1.x;
-       pt1.y = 400+200*pt1.y;
-       pt2.x = 400+200*pt2.x;
-       pt2.y = 400+200*pt2.y;
-       pt3.x = 400+200*pt3.x;
-       pt3.y = 400+200*pt3.y;
-       pt4.x = 400+200*pt4.x;
-       pt4.y = 400+200*pt4.y;
-       if (typeof color === 'undefined'){
-           color = "yellow";
-       }
-       g.strokeStyle = 'green';
-       g.fillStyle = color;
-       g.beginPath();
-       g.moveTo(pt1.x, pt1.y);
-       g.lineTo(pt2.x, pt2.y);
-       g.lineTo(pt3.x, pt3.y);
-       g.lineTo(pt4.x, pt4.y);
-       g.lineTo(pt1.x, pt1.y);
-       g.stroke();
-       g.fill();
-   }
-   function drawTrumpet(g, pos, scale,rot){
-      var res = 0.5;
-      var m = new Matrix();
-      //var noiseGen = new Noise(); 
-
-      m.translate(pos.x, pos.y, pos.z);
-      m.scale(scale.x, scale.y, scale.z);
-      m.rotateX(rot.x);
-      m.rotateY(rot.y);
-      m.rotateZ(rot.z);
-       
-      for (u=0; u<2*Math.PI; u=u+res){
-          for (v=0; v<17; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  var x = vaux[i];
-                  var y = 6/(Math.pow((vaux[i]+1),0.7))*Math.cos(uaux[i]);
-                  var z = 6/(Math.pow((vaux[i]+1),0.7))*Math.sin(uaux[i]);
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-               
-          }  
-      }   
-   }
-    
-   function drawSphere(g, pos, scale){
-      var res = 0.05;
-      var m = new Matrix();
-      var noiseGen = new Noise(); 
-
-      m.translate(pos.x+0.2*noiseGen.noise([time,0,time]), pos.y+0.2*noiseGen.noise([0,0,time]), pos.z);
-      m.scale(scale.x, scale.y, scale.z);
-      //m.rotateY(time/10);
-      //m.rotateZ(time/10);
-       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  
-                  //sphere
-                  var x = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.sin(2*Math.PI*uaux[i]);
-                  var y = Math.sin(Math.PI*vaux[i] - Math.PI/2);
-                  var z = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.cos(2*Math.PI*uaux[i]);
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-               
-          }  
-      }   
-   }
-    
-   function drawCilinder(g, canvas, pos, scale, rot){
-      var res = 0.1;
-      var m = new Matrix();
-      m.translate(pos.x, pos.y, pos.z);
-      m.rotateX(rot.x);
-      m.rotateY(rot.y);
-      m.rotateZ(rot.z);
-      m.scale(scale.x, scale.y, scale.z);
+   var theta_m = 0;
+   var cl = [];
+   cl[0] = 300;
+   cl[1] = 300;
+   var timeref = -1000;
+   canvas.update = function(g) {
+      g.fillStyle = 'rgb(70,150,200)';
+      g.fillStyle = 'white';
+      g.fill();
       
-      var noiseGen = new Noise(); 
+      g.beginPath();
+      timeref = timeref +0.01;
+      var x = this.cursor.x, y = this.cursor.y;
+      if (this.cursor.z){
+          timeref = 0;
+          cl[0] = x;
+          cl[1] = y;
+      }
       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  //cilinder
-                  var noise = noiseGen.noise([u,v,time]);
-                  var x = Math.sin(2*Math.PI*uaux[i])+ noise;
-                  var y = 2*vaux[i]-1+ noise;
-                  var z = Math.cos(2*Math.PI*uaux[i])+ noise;  
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-              
-          }  
-      }   
-   }
+      var sa = new Shape([new Vector3( 25, 0,0),
+                          new Vector3(100, 0,40*Math.sin(3*time)),
+                          new Vector3( 25, 40,0),
+                          new Vector3(  0, 80,0),
+                          new Vector3(-25, 40,0),
+                          new Vector3(-100, 0,40*Math.sin(3*time)),
+                          new Vector3(-25, 0,0),
+                          new Vector3(-10, -80,0),
+                          new Vector3( 10, -80,0)
+                         ], [0,1,2,3,4,5,6,7,8]);
+
+
+      sa = sa.rotateZ(0.25*Math.sin(time));
+      sa = sa.rotateX(0.004*y);
+      sa = sa.rotateY(Math.PI);
+      sa = sa.scale(0.5,0.5,0);
+      sa = sa.translate(x,y,0);
+      g.fillStyle = 'red';
+      sa.draw(g);
     
-   function drawHyperquadratic(g, pos, scale){
-      var res = 0.05;
-      var m = new Matrix();
-      var noiseGen = new Noise(); 
-      m.translate(pos.x , pos.y , pos.z);
-      m.scale(scale.x, scale.y, scale.z);
-       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  var noise2 = noiseGen.noise([u,v,time]);
-                  //hyperquadratic
-                  var x = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.sin(2*Math.PI*uaux[i])+0.5*noise2;
-                  var y = Math.sin(Math.PI*vaux[i] - Math.PI/2)+noise2;
-                  var z = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.cos(2*Math.PI*uaux[i])+0.5*noise2;
-                  var scaleconst = Math.pow(x*x*x*x + y*y*y*y + z*z*z*z, 0.25)+0.1*noise2;
-                  x = x/scaleconst;
-                  y = y/scaleconst;
-                  z = z/scaleconst;
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-              
-          }  
-      }   
-   }
-    
-   function drawPlane(g){
-      var res = 0.05;
-      var m = new Matrix();
-      m.scale(0.5,0.5,0.5);
-      m.rotateY(time/10);
-      m.rotateZ(time/10);
-       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  //plane
-                  var x = 2*uaux[i]-1;
-                  var y = 2*vaux[i]-1;
-                  var z = 0;
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-              
-          }  
-      }   
-   } 
+      var sa2 = new Shape([new Vector3( 0, 0,0),
+                          new Vector3(10, 0,0),
+                          new Vector3(  10, 10,0),
+                          new Vector3( 0, 10,0),
+                          new Vector3( 0, 10,10),
+                          new Vector3(10, 10,10),   
+                          new Vector3( 10, 0,10),
+                          new Vector3( 0, 0,10)
+                         ], [0,1,2,3,4,5,2,1,6]);
+      sa2 = sa2.translate(100,100,0);
+      sa2 = sa2.scale(0.5,0.5,0);
+      sa2.draw(g);
+  
+      g.fillStyle = 'blue';
+      for (k = 0; k<50; k++){
+          var timeaux = Math.abs(timeref*k);
+		  var r =150*timeaux;
+		  for (j = 0; j < 20; j++){
+		      var sb2 = new Shape([new Vector3(-50*((j+k)%5),-50*((j+k+1)%5),40),
+		                          new Vector3( 50*((3+j+k)%5),-50*((j+k)%5),60),
+		                          new Vector3( 50*((1+j+k)%5), 10,40),
+		                          new Vector3(-50, 50*((j+k)%5),50),
+		                          new Vector3(-100*((j+k)%5), 20*((j+k+1)%5),30),
+                                  new Vector3(-100*((j+k)%5), 20*((j+k+1)%5),0),
+                                  new Vector3(-10*((j+k)%5), 20*((j+k+1)%5),40)
+		                        ], [0,1,2,3,4,5,6]);
 
-   function drawShell(g){
-      var res = 0.05;
-      var m = new Matrix();
-      m.scale(0.5,0.5,0.5);
-      m.rotateY(time/10);
-      m.rotateZ(time/10);
-       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  //shell
-                  var x = Math.pow((4/3), 3*Math.PI*vaux[i]-2*Math.PI)*Math.sin(Math.PI*uaux[i])*Math.sin(Math.PI*uaux[i])*Math.cos(3*Math.PI*vaux[i]-2*Math.PI);
-                  var y = Math.pow((4/3), 3*Math.PI*vaux[i]-2*Math.PI)*Math.sin(Math.PI*uaux[i])*Math.sin(Math.PI*uaux[i])*Math.sin(3*Math.PI*vaux[i]-2*Math.PI);
-                  var z = Math.pow((4/3), 3*Math.PI*vaux[i]-2*Math.PI)*Math.sin(Math.PI*uaux[i])*Math.cos(Math.PI*uaux[i]);
-                  
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-              
-          }  
-      }   
-   } 
-    
-   function drawSnake(g, pos, scale, rot){
-      var res = 0.1;
-      var m = new Matrix();
-      //var noiseGen = new Noise();
-      //var noise2 = noiseGen.noise([pos.x,0,0]);
-      m.translate(pos.x , pos.y , pos.z);
-      m.scale(scale.x, scale.y, scale.z);
-      m.rotateX(rot.x);
-      m.rotateY(rot.y);
-      m.rotateZ(rot.z);
-       
-      for (u=0; u<1; u=u+res){
-          for (v=0; v<1; v=v+res){
-              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
-              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
-              var final = [];
-              for (i=0; i<4; i++){
-                  //snake
-                  var x = (1-vaux[i])*(3+Math.cos(2*Math.PI*uaux[i]))*Math.cos(2*Math.PI*vaux[i]);
-                  var y = (1-vaux[i])*(3+Math.cos(2*Math.PI*uaux[i]))*Math.sin(2*Math.PI*vaux[i]);
-                  var z = 6*vaux[i]+(1-vaux[i])*Math.sin(2*Math.PI*uaux[i]);
- 
-                  vec = new Vector3(x,y,z);
-                  vec = m.transform(vec);
-                  final[i] = vec; 
-              }
-              
-              drawSquare(final[0], final[1], final[2], final[3], g);
-              
-          }  
-      }   
-   } 
-    canvas.update = function(g) {
-      this.g = g; // so the drawLine method will know where to draw to.
+              var sb = new Shape([new Vector3( 25, 0,0),
+                          new Vector3(100, 0,40*Math.sin(10*time)),
+                          new Vector3( 25, 40,0),
+                          new Vector3(  0, 80,0),
+                          new Vector3(-25, 40,0),
+                          new Vector3(-100, 0,40*Math.sin(10*time)),
+                          new Vector3(-25, 0,0),
+                          new Vector3(-10, -80,0),
+                          new Vector3( 10, -80,0)
+                         ], [0,1,2,3,4,5,6,7,8]);
 
-      var theta = 3 * time;
+		      sb = sb.rotateZ(j+k+timeaux);
+              sb = sb.rotateX(j+k+timeaux);
+              sb = sb.rotateY(j+k+timeaux); 
+		      //sb = sb.scale(0.5*Math.sin(time),0.5*Math.sin(time),0);
+		      sb = sb.scale(0.1*timeaux*((j+k)%5),0.1*timeaux*((j+k)%5),0);
+              var rng = CustomRandom(j);
+		      sb = sb.translate(cl[0]+r*Math.sin(j), cl[1]+r*Math.cos(j),0);
+              g.fillStyle = 'rgb('+ 70*((j+k)%5) + ',' + 30*((j+k)%10) + ',' + 20*((j+k)%15) + ')';
+		      sb.draw(g);
+		  }
+      }
 
-      g.lineCap = "round";
-      g.lineJoin = "round";
 
-      g.fillStyle = 'rgb(255,255,255)';
+      g.strokeStyle = 'blue';
       g.beginPath();
       g.moveTo(0,0);
-      g.lineTo(this.width,0);1
+      g.lineTo(this.width,0);
       g.lineTo(this.width,this.height);
       g.lineTo(0,this.height);
-      g.fill();
-     
-      g.lineWidth = 2;
-      
-      //drawPlane(g);
-      
-      drawCilinder(g, this, new Vector3(-0.25,0.4, 3), new Vector3(0.1,.3,0.1), new Vector3(0,0,0));
-      drawCilinder(g, this, new Vector3(0.25,0.4, 3), new Vector3(0.1,.3,0.1), new Vector3(0,0,0));
-      drawCilinder(g, this, new Vector3(-1.25,-0.5, 3), new Vector3(0.05,.2,0.1), new Vector3(0,0,Math.PI/4*(1.5+Math.sin(time))));
-      drawCilinder(g, this, new Vector3(1.25,-0.5, 3), new Vector3(0.05,.3,0.1), new Vector3(0,0,-Math.PI/4*(1.5+Math.sin(time))));
-      drawHyperquadratic(g, new Vector3(0.,-0.5, 3), new Vector3(1, 0.5, 0.5));
-      drawSphere(g, new Vector3(0.,-1.25, 3), new Vector3(0.2, 0.2, 0.2));
-      drawTrumpet(g, new Vector3(0.8,-1.1+0.05*Math.sin(3*time), 3), new Vector3(0.045, 0.015, 0.015),new Vector3(0.05*Math.sin(3*time), 0.2, Math.PI+0.05*Math.sin(3*time)));
-      var noiseGen = new Noise();
-      for (m=0; m<2; m++){
-        for (k=0; k<4; k++){
-          var noise2 = noiseGen.noise([k*m,k*m,k+time/3]);
-          drawSnake(g,new Vector3(-1.5+k+1*noise2,-2+(1.5*time%8)-2*m+noise2, 2.5), new Vector3(0.05, 0.05, 0.05),new Vector3(-Math.PI/2, 0.2, 4*time));
-        }
-      }
+      g.lineTo(0,0);
+      g.stroke();
    }
 
 </script>
+
