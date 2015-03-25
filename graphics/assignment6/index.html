@@ -1,7 +1,7 @@
 <body bgcolor=Black>
 <center>
 <br><br>
-<font color="black">Carnival</font>
+<font color="white">Carnival</font>
 <br><br>
 <canvas id=canvas1 background='black' width=800 height=800>
 
@@ -10,6 +10,7 @@
 
 <script src=drawlib1.js></script>
 <script src=noise.js></script>
+<script src=simpleInvert.js></script>
 <script>
 
    var origin     = new Vector3(0,0,0);
@@ -65,7 +66,7 @@
       m.rotateX(rot.x);
       m.rotateY(rot.y);
       m.rotateZ(rot.z);
-       
+      m.cameraFly(Cinv);
       for (u=0; u<2*Math.PI; u=u+res){
           for (v=0; v<17; v=v+res){
               var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
@@ -96,7 +97,7 @@
       m.scale(scale.x, scale.y, scale.z);
       //m.rotateY(time/10);
       //m.rotateZ(time/10);
-       
+      m.cameraFly(Cinv); 
       for (u=0; u<1; u=u+res){
           for (v=0; v<1; v=v+res){
               var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
@@ -128,7 +129,7 @@
       m.rotateY(rot.y);
       m.rotateZ(rot.z);
       m.scale(scale.x, scale.y, scale.z);
-      
+      m.cameraFly(Cinv);
       var noiseGen = new Noise(); 
       
       for (u=0; u<1; u=u+res){
@@ -160,6 +161,7 @@
       var noiseGen = new Noise(); 
       m.translate(pos.x , pos.y , pos.z);
       m.scale(scale.x, scale.y, scale.z);
+      m.cameraFly(Cinv);
        
       for (u=0; u<1; u=u+res){
           for (v=0; v<1; v=v+res){
@@ -223,7 +225,7 @@
       m.scale(0.5,0.5,0.5);
       m.rotateY(time/10);
       m.rotateZ(time/10);
-       
+      
       for (u=0; u<1; u=u+res){
           for (v=0; v<1; v=v+res){
               var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
@@ -257,7 +259,7 @@
       m.rotateX(rot.x);
       m.rotateY(rot.y);
       m.rotateZ(rot.z);
-       
+      m.cameraFly(Cinv); 
       for (u=0; u<1; u=u+res){
           for (v=0; v<1; v=v+res){
               var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
@@ -279,9 +281,37 @@
           }  
       }   
    } 
+    var Cinv;
     canvas.update = function(g) {
       this.g = g; // so the drawLine method will know where to draw to.
-
+      var noiseGen = new Noise();
+      var noisex = noiseGen.noise([time/3,0,time/3]);
+      var noisey = noiseGen.noise([time*time/9,time/3,time/3]);
+      //calculate camera matrix C:
+      var Cz = [0.2*noisex,0.2*noisey,1]; //aim
+      var Cpos = [0,0,-1]; //pos
+      var nY = [0,1,0];
+      
+      var Cx = [nY[1]*Cz[2] - nY[2]*Cz[1], nY[2]*Cz[0] - nY[0]*Cz[2], nY[0]*Cz[1] - nY[1]*Cz[0]];
+      var Cdist = Math.pow(Cx[0]*Cx[0] + Cx[1]*Cx[1] + Cx[2]*Cx[2], 0.5);
+      
+      var Cx = [Cx[0]/Cdist,Cx[1]/Cdist,Cx[2]/Cdist];
+      var Cy = [Cz[1]*Cx[2] - Cz[2]*Cx[1], Cz[2]*Cx[0] - Cz[0]*Cx[2], Cz[0]*Cx[1] - Cz[1]*Cx[0]];
+      var C = [Cx[0],Cy[0],Cz[0],Cpos[0],
+               Cx[1],Cy[1],Cz[1],Cpos[1],
+		       Cx[2],Cy[2],Cz[2],Cpos[2],
+		       0,0,0,1];
+      Cinv =  [0,0,0,0,
+		       0,0,0,0,
+		       0,0,0,0,
+		       0,0,0,0];    
+      simpleInvert(C, Cinv);
+      //Convert to Cinv to array
+      Cinv = [[Cinv[0], Cinv[1],Cinv[2],Cinv[3]],
+              [Cinv[4], Cinv[5],Cinv[6],Cinv[7]],
+              [Cinv[8], Cinv[9],Cinv[10],Cinv[11]],
+              [Cinv[12], Cinv[13],Cinv[14],Cinv[15]]];
+      
       var theta = 3 * time;
 
       g.lineCap = "round";
@@ -306,7 +336,7 @@
       drawHyperquadratic(g, new Vector3(0.,-0.5, 3), new Vector3(1, 0.5, 0.5));
       drawSphere(g, new Vector3(0.,-1.25, 3), new Vector3(0.2, 0.2, 0.2));
       drawTrumpet(g, new Vector3(0.8,-1.1+0.05*Math.sin(3*time), 3), new Vector3(0.045, 0.015, 0.015),new Vector3(0.05*Math.sin(3*time), 0.2, Math.PI+0.05*Math.sin(3*time)));
-      var noiseGen = new Noise();
+      
       for (m=0; m<2; m++){
         for (k=0; k<4; k++){
           var noise2 = noiseGen.noise([k*m,k*m,k+time/3]);

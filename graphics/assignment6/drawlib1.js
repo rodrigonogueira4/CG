@@ -129,6 +129,9 @@
          this.M = this.multiplyMatrices(this.M,S);
          return;
 	  },
+      cameraFly : function(Cinv) {
+          this.M = this.multiplyMatrices(Cinv,this.M); //adjust for camera view
+      },
 	  transform : function(src) {
          srclst = [[src.x],[src.y],[src.z],[1]];
 	     dstlst = this.multiplyMatrices(this.M,srclst);
