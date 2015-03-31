@@ -1,0 +1,81 @@
+<body bgcolor=white>
+<center>
+<br><br>
+<font color="black">Basics 1</font>
+<br><br>
+<canvas id=canvas1 background='black' width=800 height=800>
+
+</center>
+</body>
+
+<script src=drawlib1.js></script>
+
+<script>
+
+   var origin     = new Vector3(0,0,0);
+   var shoulder   = new Vector3();
+   var elbow      = new Vector3();
+   var wrist      = new Vector3();
+   var fingertips = new Vector3();
+   var m = new Matrix();
+   var canvas = initCanvas('canvas1');
+   function drawLine(src, dst, g){
+       g.strokeStyle = 'blue';
+       g.beginPath();
+       g.moveTo(400+200*src.x, 400+200*-src.y);
+       g.lineTo(400+200*dst.x, 400+200*-dst.y);
+       g.stroke();
+   }
+   canvas.update = function(g) {
+      this.g = g; // so the drawLine method will know where to draw to.
+
+      var theta = 3 * time;
+
+      g.lineCap = "round";
+      g.lineJoin = "round";
+
+      g.fillStyle = 'rgb(220,250,255)';
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(this.width,0);1
+      g.lineTo(this.width,this.height);
+      g.lineTo(0,this.height);
+      g.fill();
+     
+      g.lineWidth = 1;
+      var res = 0.005;
+
+      for (u=0; u<1; u=u+res){
+          for (v=0; v<1; v=v+res){
+
+              var x = 2*u-1;
+              var y = 2*v-1;
+              var z = 0; 
+              var xn = 2*(u+res)-1;
+              var yn = 2*(v+res)-1;
+              var zn = 2*(z+res)-1;
+
+              var x = Math.sin(2*Math.PI*u);
+              var y = 2*v-1;
+              var z = Math.cos(2*Math.PI*u);
+              var xn = Math.sin(2*Math.PI*(u+res));
+              var yn = 2*(v+res)-1;
+              var zn = Math.cos(2*Math.PI*(u+res));
+              
+              /*var x = Math.cos(Math.PI*v - Math.PI/2) * Math.sin(2*Math.PI*u);
+              var y = Math.sin(Math.PI*v - Math.PI/2);
+              var z = Math.cos(Math.PI*v - Math.PI/2) * Math.cos(2*Math.PI*u);
+              var xn = Math.cos(Math.PI*(v+res) - Math.PI/2) * Math.sin(2*Math.PI*(u+res));
+              var yn = Math.sin(Math.PI*(v+res) - Math.PI/2);
+              var zn = Math.cos(Math.PI*(v+res) - Math.PI/2) * Math.cos(2*Math.PI*(u+res));*/
+              if (xn<1){
+                  drawLine(new Vector3(x,y,0),new Vector3(xn,y,0), g);
+              }
+              if (yn<1){
+                  drawLine(new Vector3(x,y,0),new Vector3(x,yn,0), g);
+              }
+          }  
+      }
+   }
+
+</script>

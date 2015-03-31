@@ -1,0 +1,353 @@
+<body bgcolor=Black>
+<center>
+<br><br>
+<font color="white">Splines Editor</font>
+<br><br>
+<button type="button" onclick="addSpline()">Add Spline</button>
+<button type="button" onclick="delSpline()">Del Spline</button>
+<br><br>
+<canvas id=canvas1 background='black' width=800 height=800>
+</center>   
+<br><br>
+<center>
+<br><br>
+<font color="white">Curbed Birds (Add a lot of birds and see what happens...)</font>
+<br><br>
+<button type="button" onclick="addBird()">Add Bird</button>
+<br><br>
+<canvas id=canvas2 background='black' width=800 height=800>
+</center>
+<br><br><br><br><br><br><br><br>
+</body>
+
+<script src=drawlib1.js></script>
+<script src=noise.js></script>
+<script src=simpleInvert.js></script>
+<script>
+
+   var m = new Matrix();
+   var canvas1 = initCanvas('canvas1');
+   var canvas2 = initCanvas('canvas2');
+    
+   function drawLine(src, dst, g){
+       g.strokeStyle = 'blue';
+       g.beginPath();
+       g.moveTo(400+200*src.x, 400+200*-src.y);
+       g.lineTo(400+200*dst.x, 400+200*-dst.y);
+       g.stroke();
+   }
+   
+   function drawSquare(pt1, pt2, pt3, pt4, g, color){
+       pt1 = perspectiveTransform(pt1, 2.5);
+       pt2 = perspectiveTransform(pt2, 2.5);
+       pt3 = perspectiveTransform(pt3, 2.5);
+       pt4 = perspectiveTransform(pt4, 2.5);
+       pt1.x = 400+200*pt1.x;
+       pt1.y = 400+200*pt1.y;
+       pt2.x = 400+200*pt2.x;
+       pt2.y = 400+200*pt2.y;
+       pt3.x = 400+200*pt3.x;
+       pt3.y = 400+200*pt3.y;
+       pt4.x = 400+200*pt4.x;
+       pt4.y = 400+200*pt4.y;
+       if (typeof color === 'undefined'){
+           color = "black";
+       }
+       g.strokeStyle = 'black';
+       g.fillStyle = color;
+       g.beginPath();
+       g.moveTo(pt1.x, pt1.y);
+       g.lineTo(pt2.x, pt2.y);
+       g.lineTo(pt3.x, pt3.y);
+       g.lineTo(pt4.x, pt4.y);
+       g.lineTo(pt1.x, pt1.y);
+       g.stroke();
+       g.fill();
+   }
+    
+   function drawHyperquadratic(g, pos, scale){
+      var res = 0.05;
+      var m = new Matrix();
+      m.translate(pos.x , pos.y , pos.z);
+      m.scale(scale.x, scale.y, scale.z);
+      m.rotateY(Math.PI);
+      //m.cameraFly(Cinv);
+       
+      for (u=0; u<1; u=u+res){
+          for (v=0; v<1; v=v+res){
+              var uaux = [u-res/2, u+res/2, u+res/2, u-res/2]; 
+              var vaux = [v-res/2, v-res/2, v+res/2, v+res/2]; 
+              var final = [];
+              for (i=0; i<4; i++){
+                  //hyperquadratic
+                  var x = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.sin(2*Math.PI*uaux[i])+0.5;
+                  var y = Math.sin(Math.PI*vaux[i] - Math.PI/2);
+                  var z = Math.cos(Math.PI*vaux[i] - Math.PI/2) * Math.cos(2*Math.PI*uaux[i])+0.5;
+                  var scaleconst = Math.pow(x*x*x*x + y*y*y*y + z*z*z*z, 0.25);
+                  x = x/scaleconst;
+                  y = y/scaleconst;
+                  z = z/scaleconst;
+ 
+                  vec = new Vector3(x,y,z);
+                  vec = m.transform(vec);
+                  final[i] = vec; 
+              }
+              
+              drawSquare(final[0], final[1], final[2], final[3], g);
+              
+          }  
+      }   
+   }
+
+    var multiply = 1;
+    var ABCDx1 = [[[-0.5],[-0.5],[0.5],[0.5]]];
+    var ABCDy1 = [[[-0.5],[0.5],[0.5],[-0.25]]];
+    var ABCDx2 = [[[-0.5],[-0.5],[0.5],[0.5]]];
+    var ABCDy2 = [[[-0.5],[0.5],[0.5],[-0.25]]];
+    var selSquare = -1;
+    var lastSplineSelected = -1;
+    var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "orange", "purple", "red", "teal", "yellow"];
+    var numsplines1 = 1;
+    var numsplines2 = 1;
+    function addSpline(){
+        ABCDx1[numsplines1] = [[-0.5],[-0.5],[0.5],[0.5]];
+        ABCDy1[numsplines1] = [[-0.5],[0.5],[0.5],[-0.25]];
+        numsplines1 = numsplines1 + 1;
+    }
+    
+    function addBird(){
+        ABCDx2[numsplines2] = [[-0.5],[-0.5],[0.5],[0.5]];
+        ABCDy2[numsplines2] = [[-0.5],[0.5],[0.5],[-0.25]];
+        numsplines2 = numsplines2 + 1;
+    }
+    
+    var del;
+    function delSpline(){
+        del = true;
+    }
+    
+    canvas1.update = function(g) {
+      
+      if (del){
+          del = false;
+          if (lastSplineSelected != -1){
+
+                console.log(lastSplineSelected);
+                
+                for (i=lastSplineSelected; i<numsplines1-1; i++){
+                    ABCDx1[i] = ABCDx1[i+1];
+                    ABCDy1[i] = ABCDy1[i+1];
+                }
+                numsplines1 = numsplines1 - 1;
+                console.log("numsplines"+numsplines1);
+                lastSplineSelected = -1;
+          }
+      }
+        
+      this.g = g; // so the drawLine method will know where to draw to.
+      
+      g.lineCap = "round";
+      g.lineJoin = "round";
+
+      g.fillStyle = 'rgb(255,255,255)';
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(this.width,0);1
+      g.lineTo(this.width,this.height);
+      g.lineTo(0,this.height);
+      g.fill();
+      g.lineWidth = 2;
+        
+      //Hermite splines
+      var hdef = [[2,-2,1,1],
+		        [-3,3,-2,-1],
+		        [0,0,1,0],
+		        [1,0,0,0]];
+        
+      var pprrx = [[-0.5],[0.5],[2],[1]];
+      var pprry = [[-0.5],[0.5],[-1],[-1]];
+      var abcdx = multiplyMatrices(hdef, pprrx);
+      var abcdy = multiplyMatrices(hdef, pprry);
+      for (t=0;t<1;t=t+0.01){      
+          // t = 0.5+0.5*Math.sin(time);
+          var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
+          var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
+          
+          var pos = viewPointTransform(new Vector3(posx,posy,0), this);
+          //g.beginPath();
+          //g.arc(pos.x,pos.y,3,0,2*Math.PI);
+          //g.fillStyle="black";
+          //g.fill();
+       }
+        
+      //Benzier splines     
+      var benzier = [[-1,3,-3,1],
+		             [3,-6,3,0],
+		             [-3,3,0,0],
+		             [1,0,0,0]];
+      
+     //draw splines
+      for (j=0;j<numsplines1;j++){
+          
+          var abcdx = multiplyMatrices(benzier, ABCDx1[j]);
+          var abcdy = multiplyMatrices(benzier, ABCDy1[j]);
+
+          for (t=0;t<1;t=t+0.01){
+              var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
+              var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
+
+              var pos = viewPointTransform(new Vector3(posx,posy,0), this);
+              g.beginPath();
+              g.arc(pos.x,pos.y,2,0,2*Math.PI);
+              g.fillStyle="black";
+              g.fill();
+          }
+
+          //draw reference squares
+          for (i=0; i<4; i++){
+
+                var Amod = viewPointTransform(new Vector3(ABCDx1[j][i][0], ABCDy1[j][i][0], 0), this);
+                //check if mouse clicked
+                if ( (this.cursor.x > Amod.x-10) && (this.cursor.x < Amod.x+10) && (this.cursor.y > Amod.y-10) && (this.cursor.y < Amod.y+10) && (this.cursor.z==1) && selSquare == -1){
+                    selSquare = [j,i];
+                    lastSplineSelected = j;
+                }    
+            
+                g.fillStyle=colors[j];
+                g.fillRect(Amod.x-10,Amod.y-10,20,20);
+            
+          }
+
+      }
+
+      if ( this.cursor.z==0 ){
+          selSquare = -1;
+      }
+        
+      if (selSquare!=-1) {
+        newCoord = viewPointTransformBack(new Vector3(this.cursor.x, this.cursor.y, 0), this);
+        ABCDx1[selSquare[0]][selSquare[1]][0] = newCoord.x;
+        ABCDy1[selSquare[0]][selSquare[1]][0] = newCoord.y;
+      }
+      
+   }
+    
+   canvas2.update = function(g) {
+        
+      this.g = g; // so the drawLine method will know where to draw to.
+      
+      g.lineCap = "round";
+      g.lineJoin = "round";
+
+      g.fillStyle = 'rgb(255,255,255)';
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(this.width,0);1
+      g.lineTo(this.width,this.height);
+      g.lineTo(0,this.height);
+      g.fill();
+      g.lineWidth = 2;
+        
+      //Hermite splines
+      var hdef = [[2,-2,1,1],
+		        [-3,3,-2,-1],
+		        [0,0,1,0],
+		        [1,0,0,0]];
+        
+      var pprrx = [[-0.5],[0.5],[2],[1]];
+      var pprry = [[-0.5],[0.5],[-1],[-1]];
+      var abcdx = multiplyMatrices(hdef, pprrx);
+      var abcdy = multiplyMatrices(hdef, pprry);
+      for (t=0;t<1;t=t+0.01){      
+          // t = 0.5+0.5*Math.sin(time);
+          var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
+          var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
+          
+          var pos = viewPointTransform(new Vector3(posx,posy,0), this);
+          //g.beginPath();
+          //g.arc(pos.x,pos.y,3,0,2*Math.PI);
+          //g.fillStyle="black";
+          //g.fill();
+       }
+        
+      //Benzier splines     
+      var benzier = [[-1,3,-3,1],
+		             [3,-6,3,0],
+		             [-3,3,0,0],
+		             [1,0,0,0]];
+      
+      var noiseGen = new Noise();
+      var noisex = 0.25*noiseGen.noise([0,time*numsplines2/4,0]);
+      var noisey = 0.25*noiseGen.noise([time*numsplines2/4,time*numsplines2/4,0])
+      //draw splines
+      for (j=0;j<numsplines2;j++){
+          var noiseGen = new Noise(); 
+          var noise = noiseGen.noise([Math.cos(10*j)*Math.sin(10*j)+1.1,Math.cos(10*j)*Math.sin(10*j)+1.1,0]);
+
+          ABCDx2[j] = [[0+noisex], [3*noise*Math.sin(4*time*noise)], [3*noise*Math.sin(2*time*noise)], [3*noise*Math.sin(4*time*noise)]];
+          ABCDy2[j] = [[-0.75+noisey], [0.5 + 3*noise*Math.sin(3*time*noise)], [0.5 + noise*Math.sin(3*time*noise)], [Math.sin(3*time*noise)]];
+          
+          if (numsplines2<17){
+              var abcdx = multiplyMatrices(benzier, ABCDx2[j]);
+              var abcdy = multiplyMatrices(benzier, ABCDy2[j]);
+
+              for (t=0;t<1;t=t+0.01){
+                  var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
+                  var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
+
+                  var pos = viewPointTransform(new Vector3(posx,posy,0), this);
+                  g.beginPath();
+                  g.arc(pos.x,pos.y,2,0,2*Math.PI);
+                  g.fillStyle="black";
+                  g.fill();
+              }
+          }
+          //draw reference squares
+          for (i=0; i<4; i++){
+
+                var Amod = viewPointTransform(new Vector3(ABCDx2[j][i][0], ABCDy2[j][i][0], 0), this);
+
+                if (i ==3){
+                  
+                  var sa = new Shape([new Vector3( 25, 0,0),
+                                      new Vector3(100, 0,40*Math.sin(20*time)),
+                                      new Vector3( 25, 40,0),
+                                      new Vector3(  0, 80,0),
+                                      new Vector3(-25, 40,0),
+                                      new Vector3(-100, 0,40*Math.sin(20*time)),
+                                      new Vector3(-25, 0,0),
+                                      new Vector3(-10, -80,0),
+                                      new Vector3( 10, -80,0)
+                                     ], [0,1,2,3,4,5,6,7,8]);
+                  sa = sa.rotateZ(0.25*Math.sin(4*time));
+                  
+                  if (numsplines2<17){
+                      sa = sa.rotateX(noise*10*Math.sin(time));
+                      sa = sa.rotateY(Math.PI);
+                      sa = sa.scale(0.5,0.5,0);
+                      sa = sa.translate(Amod.x ,Amod.y,0);
+                     
+                  }else{
+                      sa = sa.rotateX(Math.sin(time)+Math.PI);
+                      sa = sa.scale(0.5,0.5,0);
+                      sa = sa.translate(Amod.x,Amod.y-multiply,0);
+                      multiply = multiply + 0.1;
+                  }
+                  g.fillStyle = colors[j];
+                  sa.draw(g);  
+                }
+
+          }
+
+      }
+      
+      //draw box that holds the birds
+      if (numsplines2<17){
+          drawHyperquadratic(g, new Vector3(0 - noisex, -1.3 + noisey, -2), new Vector3(0.25, 0.125, 0.125));
+      }else{
+          drawHyperquadratic(g, new Vector3(0, -1.3, -2), new Vector3(0.25, 0.125, 0.125));
+      }
+      
+   } 
+
+</script>

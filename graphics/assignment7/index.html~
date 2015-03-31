@@ -1,0 +1,143 @@
+<body bgcolor=white>
+<center>
+<br><br>
+<font color="black">Click to create an explosion of birds</font>
+<br><br>
+<canvas id=canvas1 background='black' width=800 height=800>
+
+</center>
+</body>
+
+<script src=drawlib1.js></script>
+
+<script>
+
+   var CustomRandom = function(nseed) {
+
+		var seed,
+		    constant = Math.pow(2, 13)+1,
+		    prime = 37,
+		    maximum = Math.pow(2, 50);
+	 
+		if (nseed) {
+		    seed = nseed;
+		}
+	 
+		if (seed == null) {
+	        //if there is no seed, use timestamp
+		    seed = (new Date()).getTime();
+		} 
+		return {
+		    next : function() {
+		        seed *= constant;
+		        seed += prime;
+		        seed %= maximum;
+		        
+		        return seed;
+		    }
+		}
+   }
+
+   var canvas = initCanvas('canvas1');
+   var theta_m = 0;
+   var cl = [];
+   cl[0] = 300;
+   cl[1] = 300;
+   var timeref = -1000;
+   canvas.update = function(g) {
+      g.fillStyle = 'rgb(70,150,200)';
+      g.fillStyle = 'white';
+      g.fill();
+      
+      g.beginPath();
+      timeref = timeref +0.01;
+      var x = this.cursor.x, y = this.cursor.y;
+      if (this.cursor.z){
+          timeref = 0;
+          cl[0] = x;
+          cl[1] = y;
+      }
+      
+      var sa = new Shape([new Vector3( 25, 0,0),
+                          new Vector3(100, 0,40*Math.sin(3*time)),
+                          new Vector3( 25, 40,0),
+                          new Vector3(  0, 80,0),
+                          new Vector3(-25, 40,0),
+                          new Vector3(-100, 0,40*Math.sin(3*time)),
+                          new Vector3(-25, 0,0),
+                          new Vector3(-10, -80,0),
+                          new Vector3( 10, -80,0)
+                         ], [0,1,2,3,4,5,6,7,8]);
+
+
+      sa = sa.rotateZ(0.25*Math.sin(time));
+      sa = sa.rotateX(0.004*y);
+      sa = sa.rotateY(Math.PI);
+      sa = sa.scale(0.5,0.5,0);
+      sa = sa.translate(x,y,0);
+      g.fillStyle = 'red';
+      sa.draw(g);
+    
+      var sa2 = new Shape([new Vector3( 0, 0,0),
+                          new Vector3(10, 0,0),
+                          new Vector3(  10, 10,0),
+                          new Vector3( 0, 10,0),
+                          new Vector3( 0, 10,10),
+                          new Vector3(10, 10,10),   
+                          new Vector3( 10, 0,10),
+                          new Vector3( 0, 0,10)
+                         ], [0,1,2,3,4,5,2,1,6]);
+      sa2 = sa2.translate(100,100,0);
+      sa2 = sa2.scale(0.5,0.5,0);
+      sa2.draw(g);
+  
+      g.fillStyle = 'blue';
+      for (k = 0; k<50; k++){
+          var timeaux = Math.abs(timeref*k);
+		  var r =150*timeaux;
+		  for (j = 0; j < 20; j++){
+		      var sb2 = new Shape([new Vector3(-50*((j+k)%5),-50*((j+k+1)%5),40),
+		                          new Vector3( 50*((3+j+k)%5),-50*((j+k)%5),60),
+		                          new Vector3( 50*((1+j+k)%5), 10,40),
+		                          new Vector3(-50, 50*((j+k)%5),50),
+		                          new Vector3(-100*((j+k)%5), 20*((j+k+1)%5),30),
+                                  new Vector3(-100*((j+k)%5), 20*((j+k+1)%5),0),
+                                  new Vector3(-10*((j+k)%5), 20*((j+k+1)%5),40)
+		                        ], [0,1,2,3,4,5,6]);
+
+              var sb = new Shape([new Vector3( 25, 0,0),
+                          new Vector3(100, 0,40*Math.sin(10*time)),
+                          new Vector3( 25, 40,0),
+                          new Vector3(  0, 80,0),
+                          new Vector3(-25, 40,0),
+                          new Vector3(-100, 0,40*Math.sin(10*time)),
+                          new Vector3(-25, 0,0),
+                          new Vector3(-10, -80,0),
+                          new Vector3( 10, -80,0)
+                         ], [0,1,2,3,4,5,6,7,8]);
+
+		      sb = sb.rotateZ(j+k+timeaux);
+              sb = sb.rotateX(j+k+timeaux);
+              sb = sb.rotateY(j+k+timeaux); 
+		      //sb = sb.scale(0.5*Math.sin(time),0.5*Math.sin(time),0);
+		      sb = sb.scale(0.1*timeaux*((j+k)%5),0.1*timeaux*((j+k)%5),0);
+              var rng = CustomRandom(j);
+		      sb = sb.translate(cl[0]+r*Math.sin(j), cl[1]+r*Math.cos(j),0);
+              g.fillStyle = 'rgb('+ 70*((j+k)%5) + ',' + 30*((j+k)%10) + ',' + 20*((j+k)%15) + ')';
+		      sb.draw(g);
+		  }
+      }
+
+
+      g.strokeStyle = 'blue';
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(this.width,0);
+      g.lineTo(this.width,this.height);
+      g.lineTo(0,this.height);
+      g.lineTo(0,0);
+      g.stroke();
+   }
+
+</script>
+

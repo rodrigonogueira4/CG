@@ -1,0 +1,72 @@
+<body bgcolor=white>
+<center>
+<br><br>
+<font color="black">Click to create an explosion of birds</font>
+<br><br>
+<canvas id=canvas1 background='black' width=800 height=800>
+
+</center>
+</body>
+
+<script src=drawlib1.js></script>
+
+<script>
+
+   var origin     = new Vector3(0,0,0);
+   var shoulder   = new Vector3();
+   var elbow      = new Vector3();
+   var wrist      = new Vector3();
+   var fingertips = new Vector3();
+   var m = new Matrix();
+   var canvas = initCanvas('canvas1');
+   function drawLine(src, dst, g){
+       g.strokeStyle = 'blue';
+       g.beginPath();
+       g.moveTo(400+400*src.x, 400+400*-src.y);
+       g.lineTo(400+400*dst.x, 400+400*-dst.y);
+       g.stroke();
+   }
+   canvas.update = function(g) {
+      this.g = g; // so the drawLine method will know where to draw to.
+
+      var theta = 3 * time;
+
+      g.lineCap = "round";
+      g.lineJoin = "round";
+
+      g.fillStyle = 'rgb(220,250,255)';
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(this.width,0);
+      g.lineTo(this.width,this.height);
+      g.lineTo(0,this.height);
+      g.fill();
+     
+      g.lineWidth = 10;
+
+      m.identity();
+  
+      m.translate(.2,.3,0);
+
+      m.rotateZ(Math.cos(theta) * .5);
+      shoulder = m.transform(origin);
+      m.translate(0,-.2,0);
+
+      elbow = m.transform(origin);
+
+      m.rotateZ(Math.sin(theta) * .5 + .5);
+      m.translate(0,-.2,0);
+
+      wrist = m.transform(origin);
+
+      m.rotateZ(Math.cos(theta) * .25 - .25);
+      m.translate(0,-.1,0);
+
+      fingertips = m.transform(origin);
+
+      drawLine(shoulder, elbow, g);
+      drawLine(elbow, wrist, g);
+      drawLine(wrist, fingertips, g);
+   }
+
+</script>
