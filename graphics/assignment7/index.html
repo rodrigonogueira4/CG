@@ -3,7 +3,8 @@
 <br><br>
 <font color="white">Splines Editor</font>
 <br><br>
-<button type="button" onclick="addSpline()">Add Spline</button>
+<button type="button" onclick="addSpline(1)">Add Hermite Spline</button>
+<button type="button" onclick="addSpline(2)">Add Benzier Spline</button>
 <button type="button" onclick="delSpline()">Del Spline</button>
 <br><br>
 <canvas id=canvas1 background='black' width=800 height=800>
@@ -104,14 +105,17 @@
     var ABCDy1 = [[[-0.5],[0.5],[0.5],[-0.25]]];
     var ABCDx2 = [[[-0.5],[-0.5],[0.5],[0.5]]];
     var ABCDy2 = [[[-0.5],[0.5],[0.5],[-0.25]]];
+    var splineType = [2];
     var selSquare = -1;
     var lastSplineSelected = -1;
     var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "orange", "purple", "red", "teal", "yellow"];
     var numsplines1 = 1;
     var numsplines2 = 1;
-    function addSpline(){
+    function addSpline(type){
+      
         ABCDx1[numsplines1] = [[-0.5],[-0.5],[0.5],[0.5]];
         ABCDy1[numsplines1] = [[-0.5],[0.5],[0.5],[-0.25]];
+        splineType[numsplines1] = type;
         numsplines1 = numsplines1 + 1;
     }
     
@@ -130,16 +134,15 @@
       
       if (del){
           del = false;
+          console.log(lastSplineSelected);
           if (lastSplineSelected != -1){
 
-                console.log(lastSplineSelected);
-                
-                for (i=lastSplineSelected; i<numsplines1-1; i++){
+                for (i=lastSplineSelected[0]; i<numsplines1-1; i++){
                     ABCDx1[i] = ABCDx1[i+1];
                     ABCDy1[i] = ABCDy1[i+1];
+                    splineType[i] = splineType[i+1];
                 }
                 numsplines1 = numsplines1 - 1;
-                console.log("numsplines"+numsplines1);
                 lastSplineSelected = -1;
           }
       }
@@ -158,40 +161,27 @@
       g.fill();
       g.lineWidth = 2;
         
-      //Hermite splines
-      var hdef = [[2,-2,1,1],
+      //Hermite matrix
+      var hermite = [[2,-2,1,1],
 		        [-3,3,-2,-1],
 		        [0,0,1,0],
 		        [1,0,0,0]];
         
-      var pprrx = [[-0.5],[0.5],[2],[1]];
-      var pprry = [[-0.5],[0.5],[-1],[-1]];
-      var abcdx = multiplyMatrices(hdef, pprrx);
-      var abcdy = multiplyMatrices(hdef, pprry);
-      for (t=0;t<1;t=t+0.01){      
-          // t = 0.5+0.5*Math.sin(time);
-          var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
-          var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
-          
-          var pos = viewPointTransform(new Vector3(posx,posy,0), this);
-          //g.beginPath();
-          //g.arc(pos.x,pos.y,3,0,2*Math.PI);
-          //g.fillStyle="black";
-          //g.fill();
-       }
-        
-      //Benzier splines     
+      //Benzier matrix 
       var benzier = [[-1,3,-3,1],
 		             [3,-6,3,0],
 		             [-3,3,0,0],
 		             [1,0,0,0]];
       
-     //draw splines
+      //draw splines
       for (j=0;j<numsplines1;j++){
-          
-          var abcdx = multiplyMatrices(benzier, ABCDx1[j]);
-          var abcdy = multiplyMatrices(benzier, ABCDy1[j]);
-
+          if (splineType[j] ==1){
+              var abcdx = multiplyMatrices(hermite, ABCDx1[j]);
+              var abcdy = multiplyMatrices(hermite, ABCDy1[j]);
+          }else{
+              var abcdx = multiplyMatrices(benzier, ABCDx1[j]);
+              var abcdy = multiplyMatrices(benzier, ABCDy1[j]);
+          }
           for (t=0;t<1;t=t+0.01){
               var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
               var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
@@ -203,14 +193,16 @@
               g.fill();
           }
 
+        
           //draw reference squares
           for (i=0; i<4; i++){
 
                 var Amod = viewPointTransform(new Vector3(ABCDx1[j][i][0], ABCDy1[j][i][0], 0), this);
                 //check if mouse clicked
+                
                 if ( (this.cursor.x > Amod.x-10) && (this.cursor.x < Amod.x+10) && (this.cursor.y > Amod.y-10) && (this.cursor.y < Amod.y+10) && (this.cursor.z==1) && selSquare == -1){
                     selSquare = [j,i];
-                    lastSplineSelected = j;
+                    lastSplineSelected = [j,i];
                 }    
             
                 g.fillStyle=colors[j];
@@ -231,7 +223,7 @@
       }
       
    }
-    
+   var fall = 0;
    canvas2.update = function(g) {
         
       this.g = g; // so the drawLine method will know where to draw to.
@@ -287,21 +279,23 @@
           ABCDx2[j] = [[0+noisex], [3*noise*Math.sin(4*time*noise)], [3*noise*Math.sin(2*time*noise)], [3*noise*Math.sin(4*time*noise)]];
           ABCDy2[j] = [[-0.75+noisey], [0.5 + 3*noise*Math.sin(3*time*noise)], [0.5 + noise*Math.sin(3*time*noise)], [Math.sin(3*time*noise)]];
           
-          if (numsplines2<17){
-              var abcdx = multiplyMatrices(benzier, ABCDx2[j]);
-              var abcdy = multiplyMatrices(benzier, ABCDy2[j]);
-
-              for (t=0;t<1;t=t+0.01){
-                  var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
-                  var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
-
-                  var pos = viewPointTransform(new Vector3(posx,posy,0), this);
-                  g.beginPath();
-                  g.arc(pos.x,pos.y,2,0,2*Math.PI);
-                  g.fillStyle="black";
-                  g.fill();
-              }
+          if (numsplines2>=17){
+              fall = fall+1;
           }
+          var abcdx = multiplyMatrices(benzier, ABCDx2[j]);
+          var abcdy = multiplyMatrices(benzier, ABCDy2[j]);
+
+          for (t=0;t<1;t=t+0.01){
+              var posx = abcdx[0][0]*t*t*t + abcdx[1][0]*t*t + abcdx[2][0]*t + abcdx[3][0];
+              var posy = abcdy[0][0]*t*t*t + abcdy[1][0]*t*t + abcdy[2][0]*t + abcdy[3][0];
+
+              var pos = viewPointTransform(new Vector3(posx,posy,0), this);
+              g.beginPath();
+              g.arc(pos.x,pos.y+fall,2,0,2*Math.PI);
+              g.fillStyle="black";
+              g.fill();
+          }
+          
           //draw reference squares
           for (i=0; i<4; i++){
 
