@@ -88,7 +88,8 @@
        //   this.addObject(createParametric(24,12,cil), 'fs_phong');
        //}
     }
-    var missed=true;
+    var inc = 0.2;
+    var ballz = 5;
     canvas1.update = function() {
        var cy = .5*Math.cos(time);
        var sy = .5*Math.sin(time);
@@ -207,25 +208,24 @@
        var obji = this.objects[i];
        var objm = new Matrix();
        var bally = 0.6*Math.abs(Math.cos(2*time));
-       var percent = Math.abs(Math.sin(time));
        
-       if ( percent <=0.1){
+       if ( ballz <= -9.5 && ballz >= -10.5 ){
            if (this.mousePressed && ((ballx+0.1) > (-0.61+movx+fx)) && ((ballx-0.1) < (-0.61+movx+fx))){
-               missed = false;
-           }else{
-               missed = true;
+               inc = 0.2;
            }
        }
-       if (percent >=0.95){
-           missed = false;
+       if ( ballz <= -24.5 && ballz >= -25.5 ){
+           inc = 0.2;
+           ballz = 5;
+       } 
+       
+       if ( ballz > 4.5 && ballz < 5.5 ){
+           inc = -0.2;
        }
        
-       if (missed){
-           var ballz = 15*Math.sin(time);
-       }else{
-           var ballz = 15*Math.abs(Math.sin(time));
-       }
-       objm.translate(ballx, -0.4+bally, -10.0+ballz);
+       ballz = ballz + inc;
+       
+       objm.translate(ballx, -0.4+bally, ballz);
        objm.rotateY(Math.PI/2);
        objm.scale(0.03,0.03,0.03);
        obji.matrix = objm.flatten();
