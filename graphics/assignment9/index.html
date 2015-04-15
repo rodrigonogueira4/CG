@@ -8,7 +8,7 @@
 <td>
 <font face=helvetica>
 Squash!
-<br>
+<br><br>
 Use left/right arrows or A and D to move. Use space to hit the ball with the racket
 <TABLE>
 <TR>
@@ -30,6 +30,7 @@ Use left/right arrows or A and D to move. Use space to hit the ball with the rac
          // CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
 
          var renderer = new THREE.WebGLRenderer( { alpha: true } );
+          renderer.setClearColor( 0x000000, 1);
          renderer.setSize(800, 800);
          document.getElementById(name).appendChild(renderer.domElement);
 
@@ -158,9 +159,12 @@ function Scene2() {
             size  = parameters[i][1];
             materials[i] = new THREE.PointCloudMaterial( { size: size , color: 0xffee10} );
             particles = new THREE.PointCloud( geometry, materials[i] );
-            particles.rotation.x = Math.random() * 6;
-            particles.rotation.y = Math.random() * 6;
-            particles.rotation.z = Math.random() * 6;
+            var r = Math.random() * 6.4;
+            var theta = Math.random() * 6.4;
+            var phi = Math.random() * 3.2;
+            particles.rotation.x = r*Math.sin(theta)*Math.sin(phi);
+            particles.rotation.y = r*Math.cos(theta)*Math.sin(phi);
+            particles.rotation.z = r*Math.sin(phi);
             ball.add( particles );
 
         }
@@ -269,7 +273,7 @@ function Scene2() {
       
       //create ball tail
       ball.traverse( function(child) {
-            var noisez = 0.25*noiseGen.noise([time*time*1.1,time*1.1,0]);
+            //var noisez = 0.25*noiseGen.noise([time*time*1.1,time*1.1,0]);
             child.scale.x = 1.5 + 0.5*Math.sin(2*time);
             child.scale.y = 1.5 + 0.5*Math.sin(2*time);
             child.scale.z = 1.5 + 0.5*Math.sin(2*time);
