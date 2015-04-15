@@ -274,9 +274,9 @@ function Scene2() {
       //create ball tail
       ball.traverse( function(child) {
             //var noisez = 0.25*noiseGen.noise([time*time*1.1,time*1.1,0]);
-            child.scale.x = 1.5 + 0.5*Math.sin(2*time);
-            child.scale.y = 1.5 + 0.5*Math.sin(2*time);
-            child.scale.z = 1.5 + 0.5*Math.sin(2*time);
+            child.scale.x = 0.8 + 0.5*Math.abs(Math.min(0,ballz));
+            child.scale.y = 0.8 + 0.5*Math.abs(Math.min(0,ballz));
+            child.scale.z = 0.8 + 0.5*Math.abs(Math.min(0,ballz));
         }); 
       
       //update grass with wind
