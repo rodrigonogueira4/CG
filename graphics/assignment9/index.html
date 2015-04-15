@@ -1,0 +1,331 @@
+<script src=three.js></script>
+<script src=noise.js></script>
+<body>
+
+<table>
+<tr>
+<td width=75></td>
+<td>
+<font face=helvetica>
+Squash!
+<br>
+Use left/right arrows or A and D to move. Use space to hit the ball with the racket
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+<script> 
+    window.time = 0;
+   window.SimpleScene = function() {
+      this.init = function(name) {
+         this.scene = new THREE.Scene();
+	     
+         // CREATE THE CAMERA, AND ATTACH IT TO THE SCENE.
+
+         var camera = new THREE.PerspectiveCamera(50, 1, 1, 10000);
+         camera.position.z = 5;
+         this.scene.add(camera);
+
+         // CREATE THE WEBGL RENDERER, AND ATTACH IT TO THE DOCUMENT BODY.
+
+         var renderer = new THREE.WebGLRenderer( { alpha: true } );
+         renderer.setSize(800, 800);
+         document.getElementById(name).appendChild(renderer.domElement);
+
+         // CALL THE USER'S SETUP FUNCTION JUST ONCE.
+
+         this.setup();
+
+         // when the mouse moves, call the given function
+	     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+          
+         // when the mouse moves, call the given function
+	     document.addEventListener( 'keydown', onDocumentKeyDown, false ); 
+         
+         // START THE ANIMATION LOOP.
+         var that = this;
+         (function tick() {
+            time = (new Date().getTime()) / 1000;
+            that.update();
+            renderer.render(that.scene, camera);
+            requestAnimationFrame(tick);
+         })();
+      }
+    };
+    </script>
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+
+<TABLE>
+<TR>
+<TD width=80%>
+<FONT face=helvetica>
+
+
+<table>
+<tr>
+<td id='Scene2_code'>
+</td>
+<td id='Scene2_id'></td>
+</tr>
+</table>
+<script>
+
+    
+var bodyE = {"head":[0., 0.5, 0.],   //head
+          "neck":[0., 0.25, 0.],  //neck
+          "lshoulder": [-0.1, 0.25, 0.],//left shoulder
+          "rshoulder": [0.1, 0.25, 0.], //right shoulder
+          "lhand": [-0.3, 0.15, 0.], //left hand
+          "rhand":  [0.3, 0.15, 0.],//right hand
+          "lhip":  [-0.05, 0.0, 0.],//left hip
+          "rhip": [0.05, 0.0, 0.], //right hip
+          "lfoot": [-0.1, -.4, 0.],//left foot
+          "rfoot": [0.1, -.4, 0.]  //right foot
+         };
+var ground, racket, ball, grass;
+var inc = 0.2;
+var ballz = 3.5;
+var body = {};
+var destroyball=-1; 
+function Scene2() {
+ 
+   this.setup = function() {
+       
+      var light = new THREE.DirectionalLight(0xffffff);
+      light.position.set(1,1,1).normalize();
+      this.scene.add(light);
+
+      var material = new THREE.MeshNormalMaterial();
+
+      ground = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, 7), material);
+      ground.position.y = -0.5;
+      this.scene.add(ground);
+       
+      racket = new THREE.Mesh();
+      var lracket = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 16), material);
+      lracket.rotation.z = Math.PI/2;
+      var uracket = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.1, 16), material);
+      uracket.scale.z = 0.8;
+      uracket.position.x = -0.8; 
+      uracket.rotation.x = Math.PI/2;
+      racket.scale.set(0.3, 0.3, 0.3);
+      this.scene.add(racket);
+      racket.add(lracket);
+      racket.add(uracket);
+       
+      for (var key in bodyE){ 
+          var matballi = new THREE.MeshBasicMaterial( { color: 0xffee10} );
+          var balli = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), matballi);
+          balli.scale.x = 0.5;
+          balli.scale.y = 0.5;
+          balli.scale.z = 0.5;
+          body[key] = balli;
+          this.scene.add(balli);
+      }
+       
+      //create ball using particles
+      //var materialball = new THREE.MeshBasicMaterial( { color: 0xffee10} );
+      //ball = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 16), materialball);
+      //this.scene.add(ball); 
+      ball = new THREE.Mesh();
+       
+      var materials = [];
+      geometry = new THREE.Geometry();
+      for ( i = 0; i < 100; i ++ ) {
+            var vertex = new THREE.Vector3();
+            vertex.x = Math.random() * 0.05 - 0.025;
+            vertex.y = Math.random() * 0.05 - 0.025;
+            vertex.z = Math.random() * 0.05 - 0.025;
+            geometry.vertices.push( vertex );
+      }
+
+        parameters = [
+            [ [1, 1, 0.5], 0.01 ],
+            [ [0.95, 1, 0.5], 0.01 ],
+            [ [0.90, 1, 0.5], 0.01 ],
+            [ [0.85, 1, 0.5], 0.01 ],
+            [ [0.80, 1, 0.5], 0.01 ]
+        ];
+
+        for ( i = 0; i < parameters.length; i ++ ) {
+            //color = parameters[i][0];
+            size  = parameters[i][1];
+            materials[i] = new THREE.PointCloudMaterial( { size: size , color: 0xffee10} );
+            particles = new THREE.PointCloud( geometry, materials[i] );
+            particles.rotation.x = Math.random() * 6;
+            particles.rotation.y = Math.random() * 6;
+            particles.rotation.z = Math.random() * 6;
+            ball.add( particles );
+
+        }
+        this.scene.add(ball);
+       
+      //add grass
+      grass = new THREE.Mesh();
+      var noiseGen = new Noise();
+      for (xi=0; xi<50; xi++){
+          for (zi=0; zi<50; zi++){
+              var matgrassi = new THREE.MeshBasicMaterial( { color: 0x00ff00} );
+              var grassi = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.08, 0.005), matgrassi);
+              var noisex = 0.25*noiseGen.noise([2.1*xi*zi,2.1*zi,0]);
+              var noisez = 0.25*noiseGen.noise([2.1*zi*zi,2.1*xi*xi,0]);
+              grassi.position.y = -0.45;
+              grassi.position.x =  -1.8 + 3.6*(xi/50) + noisex;
+              grassi.position.z =  -2.7 + 6*(zi/50) + noisez;
+              grass.add(grassi);
+          }
+      }
+      this.scene.add(grass);
+   }
+
+   this.update = function() {
+      var noiseGen = new Noise();
+      var fx =  0.5*this.mouseX/800;
+      var fy = .05*Math.cos(time);
+      for (var key in bodyE){  
+         body[key].position.set(bodyE[key][0]+posX,bodyE[key][1]+fy,bodyE[key][2]);
+         body[key].scale.set(.05,.05,.05);
+      }
+      
+      //move feet
+      key = "lfoot";
+      var fy = 0.2*Math.abs(Math.sin(2*ft));
+      body[key].position.y = bodyE[key][1]+fy;
+      key = "rfoot";
+      var fy = 0.2*Math.abs(Math.sin( Math.PI/2 + 2*ft));
+      body[key].position.y = bodyE[key][1]+fy; 
+      
+      if (hit){
+          if (fb<1.5){
+              fb = fb+0.07;
+          }else{
+              hit = false;
+              fb = 0;
+          }
+      }
+      var movx = -Math.abs(0.2*Math.sin(Math.PI/2 + 4*fb));
+      var movy = -0.1+0.3*Math.cos(Math.PI/2 + 4*fb);
+      var movz = 0.5*Math.cos(Math.PI/2 + 4*fb);
+      
+      //move arm  
+      key = "lhand";
+      var fy = 0.2*Math.abs(Math.sin(2*time));
+      body[key].position.x = bodyE[key][0]+movx+posX;
+      body[key].position.y = bodyE[key][1]+movy;      
+       
+      //move racket
+      racket.position.set(-0.5+movx+posX,0.11+movy,0.0+movz);
+       
+      //move ball 
+      var ballx = 0.8*Math.cos(time/2);
+      var bally = 0.6*Math.abs(Math.cos(2*time));
+       
+      if ( ballz >= 0.0 && ballz <= 0.5 ){
+          if (hit && ((ballx+0.2) > (-0.5+movx+posX)) && ((ballx-0.2) < (-0.5+movx+posX))){
+               //destroyball =0;
+               inc = 0.05;
+           }
+      }
+      
+      /*if (destroyball >= 0){
+        destroyball = destroyball + 0.05;
+        ball.traverse( function(child) {
+            //var noisez = 0.25*noiseGen.noise([2.1*(time/2),2.1*(time/2),0]);
+            //noisez = 0.8 + 0.5*Math.sin(2*time);
+            child.scale.x= child.scale.x + 0.05;
+            child.scale.y= child.scale.y + 0.05;
+            child.scale.z= child.scale.z + 0.05;
+        });
+          
+      }
+      if (destroyball > 1.5){
+          destroyball = -1;
+          inc = 0.05;
+          ballz = 3.5;
+           ball.traverse( function(child) {
+             child.scale.x = 0.01;
+             child.scale.y = 0.01;
+             child.scale.z = 0.01;
+        });  
+      }*/
+          
+      if ( ballz <= -5.5 && ballz >= -6.5 ){
+           inc = 0.05;
+           ballz = 3.5;
+      } 
+       
+      if ( ballz > 3.5 && ballz < 4.0 ){
+          inc = -0.05;
+      } 
+   
+      ballz = ballz + inc;
+      ball.position.set(ballx, -0.4+bally, ballz);
+      
+      //create ball tail
+      ball.traverse( function(child) {
+            var noisez = 0.25*noiseGen.noise([time*time*1.1,time*1.1,0]);
+            child.scale.x = 1.5 + 0.5*Math.sin(2*time);
+            child.scale.y = 1.5 + 0.5*Math.sin(2*time);
+            child.scale.z = 1.5 + 0.5*Math.sin(2*time);
+        }); 
+      
+      //update grass with wind
+      
+      grass.traverse( function(child) {
+        var noiserot = 0.25*noiseGen.noise([2.1*(time/4)*child.position.z,(time/4)*2.1*child.position.x*child.position.x,0]);
+        child.rotation.z= noiserot;
+      });  
+   }
+}
+var mouseX, mouseY;
+function onDocumentMouseMove( event ) 
+{
+	// update sprite position
+    mouseX = -1+2.6*event.clientX/800;
+    mouseY = -1-2.6*event.clientY/800;
+}
+var posX = 0;
+var ft = 0;
+var fb= 0;
+var hit = false;
+function onDocumentKeyDown( e ) 
+{
+    
+    if ( e.keyCode == 32 ) { //SpaceBar
+        hit = true;
+    }
+    
+    if ( e.keyCode == 87 ) { //W
+    }
+
+    if ( e.keyCode == 83 ) { //S 
+    }
+
+    if ( e.keyCode == 65 || e.keyCode == 37 ) { //A or left key
+        posX = posX - 0.1;
+        ft = ft +0.1; //move feet
+    }
+
+    if ( e.keyCode == 68 || e.keyCode == 39 ) { //D or right key
+        posX = posX + 0.1;
+        ft = ft +0.1; //move feet
+    }
+}
+Scene2.prototype = new SimpleScene;
+new Scene2().init('Scene2_id');
+</script>
+
+
+</FONT>
+</TD>
+</TR>
+</TABLE>
+
+</body>
+
