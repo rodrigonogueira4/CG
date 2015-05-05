@@ -1,0 +1,277 @@
+<body>
+
+<br><br>
+<b>Abstract</b>
+<br><br>
+The recent success of machine learning techniques lies mostly on supervised learning, which requires labeled data to train the models.
+In this work, we propose an alternative to obtain larger annotated datasets: the use of Computer Graphics 3D models to create synthetic, fully annotated, image and video datasets.
+We show promising preliminary results on the tasks of object recognition and self-localization using synthetic images and pre-trained convolutional networks.
+Then, we describe our next steps towards the use of synthetic video datasets for real object tracking and action recognition.
+<br><br><br><br>
+<b>Introduction</b>
+<br><br>
+Recently, deep learning techniques improved the state-of-the-art in various areas, such as computer vision, speech recognition and natural language processing. However, most of these advances, especially in computer vision tasks, used supervised learning, which requires labeled data to train the models. For instance, results from the latest ILSVCR competitions, which consists more than 1.2M natural images from objects of 1000 different classes shows that large amounts of data enable systems with impressive accuracies. However, large amounts of labeled data can be expensive to be obtained, since they must be manually acquired and annotated.
+Although the internet contains virtually unlimited data, it can be difficult to obtain samples for some specific applications. For example, if one wishes to construct a robot to recognize paths and whose cameras are mounted close to the ground level, images or videos from that viewpoint are scarce on the web. Or if one wants to automatically recognize defective mechanical parts in an assembly line, it can be difficult to obtain more than hundreds image samples of such items. Besides, some large annotated image datasets, like IMAGENET, are available for non-commercial purposes only.
+To leverage the problem of obtaining labeled images, we propose the automatic creation of labeled images and videos from 3D graphical models. Similar work has been done by [1] and [2], in which they successfully used synthetic images created from 3D models to train algorithms for pose estimation and aircraft detection, respectively. In this work, we want to demonstrate that this approach can be extended to various other applications, such as self-localization, object recognition, object tracking and action recognition. In summary, our main goal is train algorithms using large amounts of synthetic images and videos created from simple 3D models and apply them to perform tasks with real images or videos inputs.
+<br><br><br><br>
+    
+<b>Creation of Artificial Images from 3D Models</b>
+<br>
+Blender, an open-source 3D computer graphics software (http://www.blender.org/), was used to create images from 3d models of a segway.
+<br>    
+The images were created under a variety of iluminations and poses. The background was changed using randomly selected images from a set of 5000 images.
+This is necessary to make sure that the classifier will focus only in the object of interrest instead of focusing on the background.
+<br><br>
+Noise and lens distortion were added to the image as post-rendering step. This is a simple but important step because the rendered images will look
+more similar to real images taken with real cameras. 
+
+<br><br>
+The experiments can be divided in two parts:
+<br>
+1. Object Detection: Segway
+<br>
+2. Self-localization: Tennis Courts and Baseball fields
+<br><br><br>
+<b>1. Object Detection: Segway</b>
+<br><br>
+Describe here what is the task of object detection.
+
+<br><br>
+<b>Why Segways?</b>
+<br>
+Among the many possible objects that I could use to train the machine learning model, I chose segways because images of them could be easily download from the internet and
+because they are not so complex to be represented in a 3D model. Additionaly, the pre-trained model that I used was never trained with images that contain segway. This is
+important if I want to evaluate how we the model predicts unseen objects.
+
+<br><br>    
+<b>Experiments</b>
+<br><br> 
+First, 100 real images of a segway were downloaded from the internet and they were used for testing the accuracy of our models.
+<br><br>
+<table>
+<tr>
+<td width=75></td>
+<td width=150>Real Images used for testing</td>
+<td>
+    <img src="segway_(72).jpg" style="width:320px;height:240px">
+    <img src="segway_(74).jpg" style="width:320px;height:240px">
+    <img src="segway_(99).jpg" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>
+
+I began testing the performance of our classifier using only real images, like the ones showed below.
+More precisely, I used only 58 real images of a segway for training. The classifier
+could correctly classify the presence of a segway in the image in 99% of the samples, which is a pretty good result.
+<br><br>
+<table>
+<tr>
+<td width=75></td>
+<td width=150>Real Segways</td>
+<td>
+    <img src="segway_(3).jpg" style="width:320px;height:240px">
+    <img src="segway_(6).jpg" style="width:320px;height:240px">
+    <img src="segway_(9).jpg" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+99%
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>
+
+Then I downloaded a 3D model of a segway from the internet and generated some images with various poses and illuminations but no background.
+The machine learning model accuaracy was 50%, which is random guess. I believe I couldn't learn because the it focused on 
+<table>    
+<tr>
+<td width=75></td>
+<td width=150>Complex Model with no Background and Texture changes</td>
+<td>
+    <img src="sample5v5.png" style="width:320px;height:240px">
+    <img src="sample21v5.png" style="width:320px;height:240px">
+    <img src="sample100v5.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+50% (random guess, that is, it did not learn)
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>
+
+In the next experiment, a very simple model of a segway was built using only two cilinders to represent the wheels,
+one rectangle to represent the support platform, one cilinder to represent the handlebar and another to represent support rod.
+I believe that this is one the simplest models one can create to represent a segway. Just to as a reminder, I did this on purpose since the goal of these
+experiments is to verify if it is possible to train machine learning models to detect real objects using only simple 3D models. Although complex 3D models
+are likely to help training better than simpler ones, they are more expensive to be build, which decreases the appeal of using 3D models instead of real images for training.
+<br><br>
+<table>    
+<tr>            
+<td width=75></td>
+<td width=150>Simple Model with Background using 4 walls and Texture changes in the model</td>
+<td>
+    <img src="sample3v6.png" style="width:320px;height:240px">
+    <img src="sample5v6.png" style="width:320px;height:240px">
+    <img src="sample16v6.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+57%
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>
+
+<table>        
+<tr>
+<td width=75></td>
+<td width=150>More Complex Model with Background using 4 walls and Texture changes in the model</td>
+<td>
+    <img src="sample11v3.png" style="width:320px;height:240px">
+    <img src="sample19v3.png" style="width:320px;height:240px">
+    <img src="sample25v3.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+60%
+</font>
+</center>
+</td>
+</tr>    
+<tr height=100></tr>
+</table>    
+    
+One minor addition was the automatic creation of 3D models with different wheel and handlebar sizes. I simple
+randomly changed the x,y,z scale of the cilinders that represents the wheels and handlebar. The result is a wide range of different 3D models that I expect to help in the
+generalization of the machine learning model.
+<br><br>
+<table>
+<tr>
+<td width=75></td>
+<td width=150>Simple Model with Background and Texture changes. Simple ground textures. Wheels and Handlebar with different sizes</td>
+<td>
+    <img src="sample6v8.png" style="width:320px;height:240px">
+    <img src="sample7v8.png" style="width:320px;height:240px">
+    <img src="sample8v8.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+62%
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>    
+
+<table>        
+<tr>
+<td width=75></td>
+<td width=150>Simple Model with World Background instead of 4 walls. Segway texture changes. Simple ground textures, not images. Wheels and Handlebar with different sizes</td>
+<td>
+    <img src="sample3v9.png" style="width:320px;height:240px">
+    <img src="sample4v9.png" style="width:320px;height:240px">
+    <img src="sample6v9.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+61%
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>   
+
+<table>
+<tr>
+<td width=75></td>
+<td width=150>Simple Model with World Background instead of 4 walls. No Ground. Segway texture changes. Wheels and Handlebar with different sizes</td>
+<td>
+    <img src="sample5v10.png" style="width:320px;height:240px">
+    <img src="sample7v10.png" style="width:320px;height:240px">
+    <img src="sample9v10.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+80%
+</font>
+</center>
+</td>
+</tr>
+<tr height=100></tr>
+</table>    
+    
+<table>    
+<tr>
+<td width=75></td>
+<td width=150>More Complex Model with World Background instead of 4 walls. No Ground. Segway texture changes.</td>
+<td>
+    <img src="sample6v11.png" style="width:320px;height:240px">
+    <img src="sample8v11.png" style="width:320px;height:240px">
+    <img src="sample9v11.png" style="width:320px;height:240px">
+    </td>
+<td width=150>
+<center>
+<font face=helvetica>
+92%
+</font>
+</center>
+</td>
+</tr>    
+<tr height=100></tr>
+</table>    
+    
+<br><br>    
+<b>Discussions</b>
+<br><br>
+<b>The Background influence</b>
+<br><br>
+The background plays a major role in this kind of approach. I first thought that using more complex backgrounds that tried to
+simulate indoor and outdoor enviroments would help the classifier during learning but the experiments proved that I was wrong.
+I build two complex backgrounds, called Indoor and Outdoor. The Indoor enviroment was built using four walls and a ground that display
+random images as texture. Since the corners formed by these walls were the largest struture present in the image, I belive that this is
+what the classifier learned instead of focusing the 3d model of the segway.
+<br>
+The Outdoor enviroment was built using a ground with random images as texture and a random image to simulate the sky/world.
+Similarly to the Indoor enviroment, the intersection between the ground and the sky formed a corner that was
+the largest struture in the image, and therefore, the classifier learned it instead of the segway.
+<br>
+It turned out that the best way to build the enviroment was using a simple image as background, that is, no ground, walls or sky.
+Using this model for the background the accuracy increased dramatically (more than 10% in most cases), which strengths the hypothesis
+that the classifier was learning the corners instead of the 3D segway model in the previous environments.
+
+<br><br>
+<b>Model complexity</b>
+<br><br>
+One of the main questions that we want to answer is how complex the 3D model needs to be in order to train a good detection system.
+It turns out that even using a very simple model of a segway could achieve an accuracy as high as 80%. Using a more complex model the accuracy reached 92%,
+a significant increase. This indicates that using photo-realistic models help to increase accuracy. However, a very simple/cartonish models still can be useful
+when real models are not available or are expensive to be obtained.
+
+
+<br><br><br><br> 
+    
+</body>
+
